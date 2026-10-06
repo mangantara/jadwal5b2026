@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Screen - Kelas 5B</title>
+<style>
+  :root {
+    --bg: #101114;
+    --card: #191b20;
+    --muted: #9ca3af;
+    --text: #f5f5f5;
+    --accent: #7dd3fc;
+    --green: #86efac;
+    --yellow: #fde68a;
+    --red: #fca5a5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #242833 0%, var(--bg) 48%, #090a0c 100%);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+  }
+  .screen {
+    min-height: 100vh;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 1.25fr .9fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 22px;
+  }
+  header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand {
+    font-size: clamp(18px, 2vw, 30px);
+    font-weight: 700;
+    letter-spacing: .08em;
+  }
+  .date {
+    color: var(--muted);
+    font-size: clamp(15px, 1.6vw, 24px);
+  }
+  .clock-card, .schedule-card, .today-card {
+    background: rgba(25,27,32,.88);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 24px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.25);
+  }
+  .clock-card {
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+  .label {
+    color: var(--muted);
+    font-size: clamp(13px, 1.2vw, 18px);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+  .clock {
+    font-size: clamp(72px, 11vw, 180px);
+    line-height: .95;
+    font-weight: 700;
+    letter-spacing: -.04em;
+    margin: 12px 0 28px;
+  }
+  .current {
+    border-left: 5px solid var(--accent);
+    padding-left: 18px;
+  }
+  .current-name {
+    font-size: clamp(28px, 3.3vw, 58px);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .current-time {
+    color: var(--muted);
+    font-size: clamp(17px, 1.8vw, 28px);
+  }
+  .countdown {
+    margin-top: 25px;
+    font-size: clamp(30px, 4vw, 64px);
+    font-weight: 700;
+  }
+  .status {
+    margin-top: 8px;
+    font-size: clamp(15px, 1.5vw, 22px);
+    color: var(--green);
+  }
+  .schedule-card {
+    padding: 25px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .schedule-title {
+    font-size: clamp(20px, 2vw, 32px);
+    font-weight: 700;
+    margin-bottom: 15px;
+  }
+  .next {
+    background: rgba(125,211,252,.09);
+    border: 1px solid rgba(125,211,252,.2);
+    border-radius: 17px;
+    padding: 18px;
+    margin-bottom: 15px;
+  }
+  .next-label {
+    color: var(--accent);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+  .next-name {
+    font-size: clamp(22px, 2.4vw, 38px);
+    font-weight: 700;
+    margin-top: 7px;
+  }
+  .next-time {
+    color: var(--muted);
+    margin-top: 5px;
+    font-size: clamp(15px, 1.5vw, 21px);
+  }
+  .list {
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 115px 1fr;
+    gap: 12px;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    font-size: clamp(14px, 1.3vw, 19px);
+  }
+  .row.active {
+    background: rgba(134,239,172,.08);
+    border-radius: 10px;
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .row .time { color: var(--muted); }
+  .row.active .subject { color: var(--green); font-weight: 700; }
+  footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: clamp(12px, 1.1vw, 17px);
+  }
+  .fullscreen {
+    position: fixed;
+    right: 18px;
+    bottom: 16px;
+    opacity: .35;
+    background: #fff;
+    color: #111;
+    border: 0;
+    border-radius: 9px;
+    padding: 7px 10px;
+    cursor: pointer;
+  }
+  .fullscreen:hover { opacity: .8; }
+  @media (max-width: 800px) {
+    body { overflow: auto; }
+    .screen { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; padding: 15px; }
+    .clock-card { min-height: 430px; }
+    .clock { font-size: 80px; }
+    footer { grid-column: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <header>
+    <div class="brand">SMART SCREEN • KELAS 5B</div>
+    <div class="date" id="date"></div>
+  </header>
+
+  <section class="clock-card">
+    <div class="label">Waktu Sekarang</div>
+    <div class="clock" id="clock">--:--</div>
+
+    <div class="current">
+      <div class="label" id="periodLabel">MEMUAT JADWAL...</div>
+      <div class="current-name" id="currentName">—</div>
+      <div class="current-time" id="currentTime">—</div>
+      <div class="countdown" id="countdown">—</div>
+      <div class="status" id="status">—</div>
+    </div>
+  </section>
+
+  <section class="schedule-card">
+    <div class="schedule-title" id="dayTitle">Jadwal Hari Ini</div>
+    <div class="next">
+      <div class="next-label">Berikutnya</div>
+      <div class="next-name" id="nextName">—</div>
+      <div class="next-time" id="nextTime">—</div>
+    </div>
+    <div class="list" id="scheduleList"></div>
+  </section>
+
+  <footer>
+    <span>Jadwal Kelas V • 2026/2027</span>
+    <span>Offline setelah halaman dimuat</span>
+  </footer>
+</div>
+
+<button class="fullscreen" onclick="toggleFullscreen()">⛶</button>
+
+<script>
+const schedule = {
+  1: [ // Senin
+    ["07:00","07:30","Upacara Bendera"],
+    ["07:30","09:15","Bahasa Indonesia"],
+    ["09:15","09:30","Istirahat"],
+    ["09:30","11:15","Matematika"],
+    ["11:15","11:30","Istirahat"],
+    ["11:30","13:15","Seni"]
+  ],
+  2: [ // Selasa
+    ["07:30","08:40","PJOK"],
+    ["08:40","09:15","Teori PJOK"],
+    ["09:15","09:30","Istirahat"],
+    ["09:30","10:40","IPAS"],
+    ["10:40","11:15","Bahasa Inggris"],
+    ["11:15","11:30","Istirahat"],
+    ["11:30","12:05","Bahasa Inggris"],
+    ["12:05","13:15","PPKn"]
+  ],
+  3: [ // Rabu
+    ["07:30","08:40","IPAS"],
+    ["08:40","09:15","IPAS"],
+    ["09:15","09:30","Istirahat"],
+    ["09:30","11:15","Bahasa Indonesia"],
+    ["11:15","11:30","Istirahat"],
+    ["11:30","13:15","Kokurikuler"]
+  ],
+  4: [ // Kamis
+    ["07:30","08:05","PPKn"],
+    ["08:05","09:15","Bahasa Bali"],
+    ["09:15","09:30","Istirahat"],
+    ["09:30","10:05","PPKn"],
+    ["10:05","11:15","Matematika"],
+    ["11:15","11:30","Istirahat"],
+    ["11:30","13:15","Agama"]
+  ],
+  5: [ // Jumat
+    ["07:30","10:05","Kokurikuler"],
+    ["10:05","10:40","Ekskul"],
+    ["10:40","10:55","Istirahat"],
+    ["10:55","12:05","Ekskul"]
+  ],
+  6: [],
+  0: []
+};
+
+const dayNames = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+
+function toMinutes(hm) {
+  const [h,m] = hm.split(":").map(Number);
+  return h*60+m;
+}
+function nowMinutes(d) {
+  return d.getHours()*60+d.getMinutes()+d.getSeconds()/60;
+}
+function formatDuration(seconds) {
+  seconds = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(seconds/3600);
+  const m = Math.floor((seconds%3600)/60);
+  const s = seconds%60;
+  if (h > 0) return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+function dateText(d) {
+  return d.toLocaleDateString("id-ID", {
+    weekday:"long", day:"numeric", month:"long", year:"numeric"
+  });
+}
+
+function render() {
+  const d = new Date();
+  const day = d.getDay();
+  const mins = nowMinutes(d);
+  const list = schedule[day] || [];
+
+  document.getElementById("clock").textContent =
+    d.toLocaleTimeString("id-ID", {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+  document.getElementById("date").textContent = dateText(d);
+  document.getElementById("dayTitle").textContent = "Jadwal " + dayNames[day];
+
+  const container = document.getElementById("scheduleList");
+  container.innerHTML = "";
+
+  let current = null;
+  let next = null;
+
+  list.forEach(item => {
+    const start = toMinutes(item[0]);
+    const end = toMinutes(item[1]);
+    if (mins >= start && mins < end) current = item;
+    if (!next && start > mins) next = item;
+
+    const row = document.createElement("div");
+    row.className = "row" + (mins >= start && mins < end ? " active" : "");
+    row.innerHTML = `<div class="time">${item[0]}–${item[1]}</div><div class="subject">${item[2]}</div>`;
+    container.appendChild(row);
+  });
+
+  const currentName = document.getElementById("currentName");
+  const currentTime = document.getElementById("currentTime");
+  const countdown = document.getElementById("countdown");
+  const status = document.getElementById("status");
+  const periodLabel = document.getElementById("periodLabel");
+
+  if (current) {
+    const endSec = toMinutes(current[1])*60;
+    const currentSec = d.getHours()*3600+d.getMinutes()*60+d.getSeconds();
+    currentName.textContent = current[2];
+    currentTime.textContent = `${current[0]} – ${current[1]}`;
+    countdown.textContent = formatDuration(endSec-currentSec);
+    periodLabel.textContent = "Sedang Berlangsung";
+    status.textContent = current[2].toLowerCase().includes("istirahat")
+      ? "Waktu istirahat"
+      : "Pembelajaran berlangsung";
+  } else if (next) {
+    currentName.textContent = next[2];
+    currentTime.textContent = `${next[0]} – ${next[1]}`;
+    const nextSec = toMinutes(next[0])*60;
+    const currentSec = d.getHours()*3600+d.getMinutes()*60+d.getSeconds();
+    countdown.textContent = formatDuration(nextSec-currentSec);
+    periodLabel.textContent = "Menunggu Berikutnya";
+    status.textContent = "Belum dimulai";
+  } else {
+    currentName.textContent = list.length ? "Kegiatan selesai" : "Tidak ada jadwal";
+    currentTime.textContent = list.length ? "Jadwal hari ini sudah selesai" : "Hari libur / tidak ada jadwal";
+    countdown.textContent = "00:00";
+    periodLabel.textContent = "Status";
+    status.textContent = "Sampai jumpa";
+  }
+
+  document.getElementById("nextName").textContent = next ? next[2] : "Tidak ada";
+  document.getElementById("nextTime").textContent = next ? `${next[0]} – ${next[1]}` : "Tidak ada kegiatan berikutnya";
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+
+render();
+setInterval(render, 250);
+</script>
+</body>
+</html>
